@@ -7,6 +7,7 @@ export default defineConfig({
     motionCanvas({
       project: [
         './src/projects/exemple.ts',
+        './src/projects/bubbleSort.ts',
       ]
     }),
     ffmpeg(),
