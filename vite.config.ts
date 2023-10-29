@@ -12,4 +12,12 @@ export default defineConfig({
     }),
     ffmpeg(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        dir: './build',
+        entryFileNames: '[name].js',
+      },
+    },
+  },
 });
