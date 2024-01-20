@@ -10,15 +10,17 @@ import { ThreadGenerator } from "@motion-canvas/core";
 import { createSignal } from "@motion-canvas/core/lib/signals";
 
 export default makeScene2D(function* (view) {
-    const size: number = 10;
-    const squareSize: number = 150;
-    const margin: number = 35;
-    const jump: number = 90;
+    const size: number = 12;
+    const sizeOver10: number = size / 10;
+    const squareSize: number = 150 / sizeOver10;
+    const margin: number = 35 / sizeOver10;
+    const jump: number = 90 / sizeOver10;
+    const fontSize: number = 75 / sizeOver10;
 
     const rects: Rect[] = [];
     const random = useRandom();
 
-    view.height(squareSize + 2 * margin + 2 * jump);
+    // view.height(squareSize + 2 * margin + 2 * jump);
     view.fill("#141414");
 
     let randomNumbers = range(size).map((i) => random.nextInt(1, 70));
@@ -42,7 +44,7 @@ export default makeScene2D(function* (view) {
                 radius={30}
             >
                 <Txt
-                    fontSize={75}
+                    fontSize={fontSize}
                     fontFamily={"JetBrains Mono"}
                     text={signals[i]().toString()}
                     fill={"#f0f0f0"}
