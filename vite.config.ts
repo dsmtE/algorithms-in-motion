@@ -9,6 +9,7 @@ export default defineConfig({
       project: [
         './src/projects/exemple.ts',
         './src/projects/bubbleSort.ts',
+        './src/projects/selectionSort.ts',
       ]
     }),
     ffmpeg(),
