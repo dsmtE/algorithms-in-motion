@@ -20,6 +20,7 @@ export interface ArrayProps extends ShapeProps, LayoutProps {
     boxStrokeWidth?: SignalValue<number>;
     highlightColor?: SignalValue<Color>;
     strokeColor?: SignalValue<Color>;
+    fillColor?: SignalValue<Color>;
 }
 
 export class Array extends Layout {
@@ -55,6 +56,10 @@ export class Array extends Layout {
     @colorSignal()
     public declare readonly strokeColor: ColorSignal<this>
 
+    @initial(new Color(Colors.background))
+    @colorSignal()
+    public declare readonly fillColor: ColorSignal<this>
+
     public length = () => this.values().length;
 
     public readonly rects: Rect[] = [];
@@ -65,7 +70,8 @@ export class Array extends Layout {
             ref={makeRef(this.rects, i)}
             size={this.boxWidth()}
             lineWidth={this.boxStrokeWidth}
-            stroke={Colors.surface} 
+            stroke={Colors.surface}
+            fill={this.fillColor}
             radius={this.boxRadius}
             // centering text
             alignItems={'center'}
