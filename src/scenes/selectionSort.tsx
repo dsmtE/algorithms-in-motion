@@ -1,7 +1,7 @@
 import { makeScene2D } from "@motion-canvas/2d";
 import { Rect, Txt, Node } from "@motion-canvas/2d/lib/components";
 import { all, sequence, waitFor } from "@motion-canvas/core/lib/flow";
-import { range, useRandom } from "@motion-canvas/core/lib/utils";
+import { range, useRandom, useScene } from "@motion-canvas/core/lib/utils";
 import {createRef, createSignal} from '@motion-canvas/core';
 import { Colors } from "@/styles/styles"
 import { Array } from "@/components/array";
@@ -9,8 +9,10 @@ import { Array } from "@/components/array";
 import { Color } from "@motion-canvas/core/lib/types";
 
 export default makeScene2D(function* (view) {
-    const random = useRandom( );
-    const ArrayVal = range(5).map(_ => random.nextInt(1, 70));
+    const seed = useScene().variables.get('seed', 42);
+    const size = useScene().variables.get('size', 8);
+    const random = useRandom(seed());
+    const ArrayVal = range(size()).map(_ => random.nextInt(1, 70));
 
     const ArrayRef = createRef<Array>();
 
@@ -29,6 +31,7 @@ export default makeScene2D(function* (view) {
             values={ArrayVal}
             highlightColor={new Color(Colors.blue)}
             strokeColor={new Color(Colors.surface)}
+            fillColor={new Color(Colors.background)}
         />
 
         <Node
@@ -42,7 +45,6 @@ export default makeScene2D(function* (view) {
             radius={4}
             width={ArrayRef().boxWidth()}
             height={2}
-            
             opacity={1}
         />
         <Txt
