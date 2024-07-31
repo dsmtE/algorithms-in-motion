@@ -151,8 +151,8 @@ export class Array extends Layout {
         this.parent().add(clonedBox1);
         this.parent().add(clonedBox2);
 
-        clonedBox1.position(this.rects[Index1].position());
-        clonedBox2.position(this.rects[Index2].position());
+        clonedBox1.absolutePosition(this.rects[Index1].absolutePosition());
+        clonedBox2.absolutePosition(this.rects[Index2].absolutePosition());
         
         const box1InitialOpacity = this.rects[Index1].opacity();
         const box2InitialOpacity = this.rects[Index2].opacity();
