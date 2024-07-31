@@ -20,6 +20,9 @@ export const Colors = {
     purple: '#824ac3',
     black: '#141414',
     transparent : '#00000000',
+    cyan: '#00BCD4',
+    pink: '#FF4081',
+    yellow: '#FFC107',
   };
   
   export const BaseFont = {
