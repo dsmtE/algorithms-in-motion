@@ -89,7 +89,11 @@ export class Array extends Layout {
             layout: true,
             gap: () => this.boxGap(),
             // Find better way using children as spawner are deprecated
-            spawner: () => this.pool.slice(0, this.values().length),
+            spawner: () => {
+                // log current time
+                console.log(`spawner: ${Date.now()}`);
+                return this.rects.slice(0, this.length());
+            },
             ...props,
         });
     }
@@ -160,14 +164,22 @@ export class Array extends Layout {
 
         clonedBox1.remove();
         clonedBox2.remove();
+                
+        // Dirty way to swap the rects preserving the rect styling
+
+        // Swap the rect references to maintain the rect styling
+        [this.rects[Index1], this.rects[Index2]] = [this.rects[Index2], this.rects[Index1]];
         
+        // swap the children of the rects to maintain the text reference on values array
+        let rects01Children = this.rects[Index1].children();
+        this.rects[Index1].children(this.rects[Index2].children());
+        this.rects[Index2].children(rects01Children);
+
         // Swap the values using array deep copy for signal array update
         let newValues = [...this.values()];
-        newValues[Index1] = this.values()[Index2];
-        newValues[Index2] = this.values()[Index1];
+        [newValues[Index1], newValues[Index2]] = [newValues[Index2], newValues[Index1]];
         this.values(newValues);
-        
-        // TODO: find a way to swap the styling of the rects
+        // As spawner depends on values signal, it will automatically update the children
 
         this.rects[Index1].opacity(box1InitialOpacity);
         this.rects[Index2].opacity(box2InitialOpacity);

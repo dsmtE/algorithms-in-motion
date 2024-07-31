@@ -113,7 +113,7 @@ export default makeScene2D(function* (view) {
         if(i != minIndex) {
             yield* all(
                 ArrayRef().rects[minIndex].fill(new Color(Colors.transparent), .5),
-                ArrayRef().highLightAt(i, .5),
+                // ArrayRef().highLightAt(i, .5),
                 ArrayRef().highLightAt(minIndex, .5),
             );
             yield* ArrayRef().swapUpDown(i, minIndex, .5);
