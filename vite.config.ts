@@ -7,9 +7,9 @@ export default defineConfig({
   plugins: [
     motionCanvas({
       project: [
-        './src/projects/exemple.ts',
         './src/projects/bubbleSort.ts',
         './src/projects/selectionSort.ts',
+        './src/projects/mergeSort.ts',
       ]
     }),
     ffmpeg(),
