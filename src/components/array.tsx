@@ -18,9 +18,9 @@ export interface ArrayProps extends ShapeProps, LayoutProps {
     boxGap?: SignalValue<number>;
     boxRadius?: SignalValue<number>;
     boxStrokeWidth?: SignalValue<number>;
-    highlightColor?: SignalValue<Color>;
-    strokeColor?: SignalValue<Color>;
-    fillColor?: SignalValue<Color>;
+    highlightColor?: SignalValue<Color | string>;
+    strokeColor?: SignalValue<Color | string>;
+    fillColor?: SignalValue<Color | string>;
 }
 
 export class Array extends Layout {
@@ -62,7 +62,9 @@ export class Array extends Layout {
 
     public length = () => this.values().length;
 
-    public readonly rects: Rect[] = [];
+    public rectsView = (minIndex: number = 0, maxIndex: number = this.length()) => this.rects.slice(minIndex, maxIndex);
+
+    protected readonly rects: Rect[] = [];
 
     // @brief Pool to reduce playback lag in the animator
     public pool = range(64).map(i => (
