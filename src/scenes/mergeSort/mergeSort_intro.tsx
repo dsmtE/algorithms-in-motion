@@ -4,20 +4,7 @@ import { all, delay, sequence, waitFor } from "@motion-canvas/core/lib/flow";
 import { makeRef, range, useRandom, useScene } from "@motion-canvas/core/lib/utils";
 import {Color, createRef} from '@motion-canvas/core';
 import { Colors, textStyle } from "@/styles/styles";
-
-// Function to sort an array and return the permutation of indexes
-function sortedPermutation(array: number[]): number[] {
-    let sorted = array.map((value, index) => { return { value, index } })
-    .sort((a, b) => a.value - b.value)
-    .map(({ index }) => index);
-    
-    let permutation = range(array.length);
-    for (let i = 0; i < array.length; i++) {
-        permutation[sorted[i]] = i;
-    }
-
-    return permutation;
-}
+import { sorted_permutation, reverse_index_mapping } from "@/utils/utils";
 
 export default makeScene2D(function* (view) {
     const seed = useScene().variables.get('seed', 42);
@@ -142,20 +129,30 @@ export default makeScene2D(function* (view) {
 
     // sort the subarrays
     const splitRectsPosition = rects.map(rect => rect.position());
-    const sortingTargetIndex = [
-        ...sortedPermutation(values.slice(0, halfSize)),
-        ...sortedPermutation(values.slice(halfSize)).map(i => i + halfSize)
-    ];
+    const sub_sorting_permutation = reverse_index_mapping([
+        ...sorted_permutation(values.slice(0, halfSize)),
+        ...sorted_permutation(values.slice(halfSize)).map(i => i + halfSize)
+    ]);
 
-    yield* sequence(0.1, ...sortingTargetIndex.map((targetIndex, i) => rects[i].position(splitRectsPosition[targetIndex], 0.3)));
+    yield* sequence(0.1, ...sub_sorting_permutation.map((targetIndex, i) => rects[i].position(splitRectsPosition[targetIndex], 0.3)));
     yield* waitFor(0.5);
 
     // swap rect references
-    const tempRects = rects.slice();
-    sortingTargetIndex.forEach((targetIndex, i) => rects[targetIndex] = tempRects[i] );
+    const tempRects = [...rects];
+    sub_sorting_permutation.forEach((targetIndex, i) => rects[targetIndex] = tempRects[i] );
+    const tempValues = [...values];
+    sub_sorting_permutation.forEach((targetIndex, i) => values[targetIndex] = tempValues[i] );
+
+    const sorting_mapping = reverse_index_mapping(sorted_permutation(values));
 
     // merge
-    yield* sequence(0.1, ...rects.map((rect, i) => rect.position(rectsPosition[i], 0.3)))
+    {
+        const tempRects = rects.slice();
+        sorting_mapping.forEach((targetIndex, i) => rects[targetIndex] = tempRects[i] );
+    }
+
+    yield* sequence(0.2, ...rects.map((rect, i) => rect.position(rectsPosition[i], 0.3)))
+
     yield* waitFor(0.5);
 
     // remove outlines and color rects and move down
