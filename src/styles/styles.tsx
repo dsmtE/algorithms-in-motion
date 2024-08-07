@@ -23,6 +23,7 @@ export const Colors = {
     cyan: '#00BCD4',
     pink: '#FF4081',
     yellow: '#FFC107',
+    white: '#FFFFFF',
   };
   
   export const BaseFont = {
@@ -34,7 +35,7 @@ export const Colors = {
   export const textStyle = {
     paddingTop: 10,
     fontFamily: 'JetBrains Mono',
-    fill: 'rgba(255, 255, 255, 0.6)',
+    fill: 'rgba(255, 255, 255, 0.8)',
   };
   
   export const WhiteLabel = {
