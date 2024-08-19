@@ -93,6 +93,20 @@ function* sort_array(
     const right_container = createRef<Layout>();
     const right_outline = createRef<Rect>();
 
+    // Add Legend
+    view.add(
+        <Layout layout direction={'column'} alignItems={'start'} topLeft={() => view.topLeft().transformAsPoint(view.worldToLocal()).add(50)}>
+            <Layout layout margin={10}>
+                <Txt text={'Sorted Array:'} {...textStyle} marginRight={50} />
+                <Rect size={[200, 60]} fill={new Color(Colors.green).alpha(0.02)} stroke={Colors.green} radius={10} lineWidth={6} />
+            </Layout>
+            <Layout layout margin={10}>
+                <Txt text={'Current Array:'} {...textStyle} marginRight={20} />
+                <Rect size={[200, 60]} fill={new Color(Colors.blue).alpha(0.02)} stroke={Colors.blue} radius={10} lineWidth={6} />
+            </Layout>
+        </Layout>
+    )
+
     view.add(create_splitted_container(
         current_container,
         current_half_size,
@@ -137,6 +151,9 @@ function* sort_array(
         current_level+1,
         current_outline,
     );
+
+    yield* waitFor(0.5);
+
     yield* sort_array(
         view,
         total_levels,
@@ -161,10 +178,12 @@ function* sort_array(
         left_outline().opacity(0, 0.3),
         right_outline().opacity(0, 0.3),
     )
-    yield* waitFor(0.2);
+    yield* waitFor(0.5);
     
-    yield current_outline.stroke(Colors.green, 0.3);
-    yield previous_highlighted?.restore(0.3);
+    yield* current_outline.stroke(Colors.green, 0.3);
+    if(previous_highlighted) {
+        yield* previous_highlighted.restore(0.3);
+    }
     yield* waitFor(0.5);
 
     [left_container, right_container, left_outline, right_outline].forEach(ref => ref().remove());
