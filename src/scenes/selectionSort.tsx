@@ -86,7 +86,7 @@ export default makeScene2D(function* (view) {
 
         let minIndex = i;
 
-        yield* ArrayRef().rects[minIndex].fill(ArrayRef().highlightColor, .5);
+        yield* ArrayRef().rectsView()[minIndex].fill(ArrayRef().highlightColor, .5);
 
         if(i + 1 < ArrayRef().length()) {
             upperLineIndex(i + 1);
@@ -99,8 +99,8 @@ export default makeScene2D(function* (view) {
             )
             if (ArrayRef().values()[minIndex] > ArrayRef().values()[j]) {
                 yield* all(
-                    ArrayRef().rects[minIndex].fill(new Color(Colors.transparent), .5),
-                    ArrayRef().rects[j].fill(ArrayRef().highlightColor, .5),
+                    ArrayRef().rectsView()[minIndex].fill(new Color(Colors.transparent), .5),
+                    ArrayRef().rectsView()[j].fill(ArrayRef().highlightColor, .5),
                     ArrayRef().deHighLightAt(j, .5),
                 );
                 minIndex = j;
@@ -112,7 +112,7 @@ export default makeScene2D(function* (view) {
 
         if(i != minIndex) {
             yield* all(
-                ArrayRef().rects[minIndex].fill(new Color(Colors.transparent), .5),
+                ArrayRef().rectsView()[minIndex].fill(new Color(Colors.transparent), .5),
                 // ArrayRef().highLightAt(i, .5),
                 ArrayRef().highLightAt(minIndex, .5),
             );
@@ -123,8 +123,10 @@ export default makeScene2D(function* (view) {
             );
 
         }else {
-            yield* ArrayRef().rects[minIndex].fill(new Color(Colors.transparent), .5);
+            yield* ArrayRef().rectsView()[minIndex].fill(new Color(Colors.transparent), .5)
         }
+
+        yield* ArrayRef().rectsView()[i].stroke(new Color(Colors.green), .5)
     }
 
     // Hide the underline and upperline
@@ -138,6 +140,6 @@ export default makeScene2D(function* (view) {
     // fill the array with green color
     yield* sequence(
         0.1,
-        ...ArrayRef().rects.map(rect => rect.fill(new Color(Colors.green), .3))
+        ...ArrayRef().rectsView().map(rect => rect.fill(new Color(Colors.green), .3))
     );
 });
