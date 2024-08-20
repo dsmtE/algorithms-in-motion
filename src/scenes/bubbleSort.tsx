@@ -1,69 +1,70 @@
-import { makeScene2D } from "@motion-canvas/2d";
+import { Layout, makeScene2D } from "@motion-canvas/2d";
 import { Rect, Txt } from "@motion-canvas/2d/lib/components";
-import { all, waitFor } from "@motion-canvas/core/lib/flow";
-import {
-    makeRef,
-    range,
-    useRandom,
-} from "@motion-canvas/core/lib/utils";
-import {createRef, easeOutCubic} from '@motion-canvas/core';
+import { all, sequence, waitFor } from "@motion-canvas/core/lib/flow";
+import { makeRef, range, useRandom, useScene } from "@motion-canvas/core/lib/utils";
+import {createRef, easeOutCubic, Promisable, Thread} from '@motion-canvas/core';
 import { ThreadGenerator, Vector2 } from "@motion-canvas/core";
 
+import {Style as ArrayStyle, boxWidthGap} from "@/utils/ArrayConstants";
+import { Colors, textStyle } from "@/styles/styles";
+import { create_outline, pos_topleft_within } from "@/utils/motion";
+
+const AS = {...ArrayStyle};
+
+function get_rect_value(rect: Rect): number {
+    return parseInt(rect.childAs<Txt>(0).text(), 10)
+}
+
 export default makeScene2D(function* (view) {
-    const size: number = 12;
-    const sizeOver10: number = size / 10;
-    const squareSize: number = 150 / sizeOver10;
-    const margin: number = 35 / sizeOver10;
-    const fontSize: number = 75 / sizeOver10;
+    const seed = useScene().variables.get('seed', 44);
+    const size = useScene().variables.get('size', 9)();
+    const random = useRandom(seed());
 
-    const rects: Rect[] = [];
-    const random = useRandom(Date.now());
+    const rects: Rect[] = []; // Array of Rects
 
-    // view.height(squareSize + 2 * margin + 2 * jump);
-    view.fill("#141414");
+    const main_container = createRef<Layout>();
+    const main_outline = createRef<Rect>();
 
-    let numbers = range(size).map(_ => random.nextInt(1, 70));
+    const comparaison_symbol_ref = createRef<Txt>();
 
-    const sortingMapping: number[] = range(size);
-
-    const txtRef = createRef<Txt>();
-
-    const fillColor = "#e3242b";
-    const sortedColor = "2832c2";
-    const validatedColor = "#2be324";
-    const compareColor = "#e6a700";
+    view.fill(Colors.background);
 
     view.add(
-        range(size).map((i) => (
-            <Rect
-                ref={makeRef(rects, i)}
-                width={squareSize}
-                height={squareSize}
-                x={
-                    (-(squareSize + margin) * (size - 1)) / 2 +
-                    (squareSize + margin) * i
-                }
-                fill={fillColor}
-                radius={30}
-            >
-                <Txt
-                    fontSize={fontSize}
-                    fontFamily={"JetBrains Mono"}
-                    text={numbers[i].toString()}
-                    fill={"#f0f0f0"}
-                />
-            </Rect>
+        <Layout
+            ref={main_container}
+            opacity={1}
+            width={size * boxWidthGap(AS) - AS.boxGap}
+            height={AS.boxWidth}
+        />
+    )
+
+    view.add(create_outline(main_container, main_outline, Colors.surface, AS.outlineMargin, 1));
+
+    // Create Rects
+    view.add(
+        range(size).map(_ => random.nextInt(1, 70)).map((value, i) => (
+        <Rect
+            ref={makeRef(rects, i)}
+            size={AS.boxWidth}
+            lineWidth={AS.boxStrokeWidth}
+            stroke={Colors.surface}
+            fill={Colors.background}
+            radius={AS.boxRadius}
+            topLeft={pos_topleft_within(main_container,i, boxWidthGap(AS))}
+        
+            // centering text
+            alignItems={'center'}
+            justifyContent={'center'}
+        >
+            <Txt
+                text={value.toString()}
+                {...textStyle}
+            />
+        </Rect>
         ))
-    );
+    )
 
-    view.add(
-        <Txt
-            ref={txtRef}
-            fill={'#ffffff'}
-            opacity={0}
-            text={">"}
-        ></Txt>
-      );
+    view.add(<Txt ref={comparaison_symbol_ref} text={'>'} {...textStyle} padding={[0, 20]} opacity={0} /> );
 
     yield waitFor(0.5);
 
@@ -76,109 +77,118 @@ export default makeScene2D(function* (view) {
 
             // Color for comparaison
             yield* all(
-                rects[sortingMapping[j]].fill(compareColor, 0.2),
-                rects[sortingMapping[j+1]].fill(compareColor, 0.2)
+                rects[j].stroke(Colors.blue, 0.2),
+                rects[j+1].stroke(Colors.blue, 0.2)
             );
 
-            yield* compareWithNext(j);
 
-            if (numbers[sortingMapping[j]] > numbers[sortingMapping[j+1]]) {
+            let greater_than = get_rect_value(rects[j]) > get_rect_value(rects[j+1]);
+            
+            // Compare with next
+            comparaison_symbol_ref().text(greater_than ? '>' : '<');
+            comparaison_symbol_ref().position(rects[j+1].position().add(rects[j].position()).div([2, 2]));
+        
+            rects[j].save();
+            rects[j+1].save();
+            comparaison_symbol_ref().save();
+            
+            let jump = boxWidthGap(AS) + AS.boxWidth;
+            yield* all(
+                rects[j].y(rects[j].y() - jump, 0.2),
+                rects[j+1].y(rects[j+1].y() - jump, 0.2),
+                comparaison_symbol_ref().y(comparaison_symbol_ref().y() - jump, 0.2),
+            );
+        
+            yield* all(
+                rects[j].x(rects[j].x() - AS.boxGap, 0.2, easeOutCubic),
+                rects[j+1].x(rects[j+1].x() + AS.boxGap, 0.2, easeOutCubic),
+                comparaison_symbol_ref().opacity(1.0, 0.2),
+            )
+        
+            yield* waitFor(0.2);
+    
+            let color = greater_than ? Colors.red : Colors.green;
+            yield* all(
+                rects[j].stroke(color, 0.3),
+                rects[j+1].stroke(color, 0.3),
+                comparaison_symbol_ref().fill(color, 0.3),
+            )
+            yield* waitFor(0.4); 
+    
+            yield* all(
+                comparaison_symbol_ref().restore(0.2),
+                rects[j].restore(0.2),
+                rects[j+1].restore(0.2),
+            );
+            
+            // Swap if needed
+            if(greater_than) {
                 swapped = true;
                 yield* swap(j, j+1)
             }
 
             // Reset color
             yield* all(
-                rects[sortingMapping[j]].fill(fillColor, 0.2),
-                rects[sortingMapping[j+1]].fill(fillColor, 0.2)
+                rects[j].stroke(Colors.surface, 0.2),
+                rects[j+1].stroke(Colors.surface, 0.2)
             );
         }
 
-        // Change color of sorted element
-        yield rects[sortingMapping[size-i-1]].fill(sortedColor, 0.2)
-
         // If no swap, validate all and break
         if (!swapped) {
-            for (let i = 0; i < size; i++) {
-                yield* rects[sortingMapping[i]].fill(validatedColor, 0.15);
-            }
+
+            const no_more_swap = createRef<Txt>();
+            view.add(
+                <Txt {...textStyle} y={200}
+                    ref={no_more_swap}
+                    text={'No more swap, no need to continue the array is sorted!'}
+                />
+            )
+
+            no_more_swap().save();
+            no_more_swap().opacity(0);
+            no_more_swap().y(no_more_swap().y() + 50);
+        
+            yield* no_more_swap().restore(0.3);
+
+            yield* waitFor(0.5);
+
+            yield* sequence(0.1, ...rects.slice(0, size-i).map(rect => rect.stroke(Colors.green, 0.3)))
+            
+            yield* waitFor(0.5);
+            yield* no_more_swap().opacity(0, 0.3);
+            no_more_swap().remove();
 
             break;
         }
-    }
-
-    function* compareWithNext(
-        i: number,
-    ): ThreadGenerator {
-    
-        let recti = rects[sortingMapping[i]];
-        let rectiplus1 = rects[sortingMapping[i+1]];
-        let txt = txtRef();
-    
-        txt.position(rectiplus1.position().add(recti.position()).div(new Vector2(2,2)));
-    
-        recti.save();
-        rectiplus1.save();
-        txt.save();
-        
-        let jump = squareSize + margin;
-        yield* all(
-            recti.y(recti.y() - jump, 0.1),
-            rectiplus1.y(rectiplus1.y() - jump, 0.1),
-            txt.y(txt.y() - jump, 0.1),
-        );
-    
-        yield* all(
-            recti.x(recti.x() - margin, 0.2, easeOutCubic),
-            rectiplus1.x(rectiplus1.x() + margin, 0.2, easeOutCubic),
-            txt.opacity(1.0, 0.2),
-        )
-    
-        yield* waitFor(0.2); 
-    
-        if (numbers[sortingMapping[i]] > numbers[sortingMapping[i+1]]) {
-            yield* all(
-                recti.fill(validatedColor, 0.15),
-                rectiplus1.fill(validatedColor, 0.15),
-                txt.fill(validatedColor, 0.15),
-            )
-    
-            yield* waitFor(0.4); 
+        else
+        {
+            // Change color of sorted element
+            yield* rects[size-i-1].stroke(Colors.green, 0.2)
         }
-    
-        yield* all(
-            txt.restore(0.2),
-            recti.restore(0.2),
-            rectiplus1.restore(0.2),
-        );
     }
-    
-    function* swap(
-        i: number,
-        j: number,
-    ): ThreadGenerator {
-    
-        let temp2 = sortingMapping[j];
-        sortingMapping[j] = sortingMapping[i];
-        sortingMapping[i] = temp2;
 
-        let recti = rects[sortingMapping[i]];
-        let rectj = rects[sortingMapping[i+1]];
-        
-        let jump = squareSize + margin;
+    yield* all(
+        sequence(0.1, ...rects.map(rect => rect.fill(Colors.green, 0.3))),
+        sequence(0.1, ...rects.map(rect => rect.stroke(Colors.surface, 0.3))),
+    )
+
+    function* swap(i: number, j: number): ThreadGenerator {
+        [rects[i], rects[j]] = [rects[j], rects[i]];
+        let jump = boxWidthGap(AS);
 
         yield* all(
-            rectj.y(rectj.y() + jump, 0.1),
-            recti.y(recti.y() - jump, 0.1)
+            rects[j].y(rects[j].y() + jump, 0.1),
+            rects[i].y(rects[i].y() - jump, 0.1)
         );
     
         yield* all(
-            rectj.x(recti.x(), 0.2),
-            recti.x(rectj.x(), 0.2)
+            rects[j].x(rects[i].x(), 0.3),
+            rects[i].x(rects[j].x(), 0.3)
         );
         yield* all(
-            rectj.y(rectj.y() - jump, 0.1),
-            recti.y(recti.y() + jump, 0.1)
+            rects[j].y(rects[j].y() - jump, 0.1),
+            rects[i].y(rects[i].y() + jump, 0.1)
         );
     }
 });

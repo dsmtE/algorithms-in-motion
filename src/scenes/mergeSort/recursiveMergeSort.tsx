@@ -6,35 +6,11 @@ import {Color, createRef, ThreadGenerator} from '@motion-canvas/core';
 import { Colors, textStyle } from "@/styles/styles";
 import {Style as ArrayStyle, boxWidthGap} from "@/utils/ArrayConstants";
 import { sorted_permutation, reverse_index_mapping } from "@/utils/utils";
+import { create_outline, pos_topleft_within } from "@/utils/motion";
 
 const AS = {...ArrayStyle};
 AS.boxWidth /= 1.2;
 AS.boxGap /= 1.5;
-
-function create_outline(
-    target_node: Reference<Layout>,
-    output_ref: Reference<Rect>,
-    stroke: Color | string = Colors.surface,
-    margin: number,
-    opacity: number = 1){
-    return (<Rect
-        ref={output_ref}
-        stroke={stroke}
-        lineWidth={6}
-        radius={8}
-        opacity={opacity}
-        position={() => target_node().position()}
-        width={() => target_node().width() + 2*margin}
-        height={() => target_node().height() + 2*margin}
-    />);
-}
-
-function pos_topleft_within(ref: Reference<Layout>, i: number, offset: number) {
-    return () => ref().topLeft().addX(i * offset)
-}
-function pos_bottomleft_within(ref: Reference<Layout>, i: number, offset: number) {
-    return () => ref().bottomLeft().addX(i * offset)
-}
 
 function create_splitted_container(
     target_container: Reference<Layout>,
