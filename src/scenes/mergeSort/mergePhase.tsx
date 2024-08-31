@@ -487,7 +487,8 @@ export default makeScene2D(function* (view) {
     )
 
     yield* all(
-        ...[i_circle, j_circle, k_circle, first_outline, second_outline].map(x => x().opacity(0, 0.3)),
+        all(...[first_outline, second_outline].map(x => x().opacity(0, 0.3))),
+        all(...[i_circle, j_circle, k_circle].map(x => x().opacity(0, 0.3)))
     )
 
     // why right container is not moving following the main container ?
