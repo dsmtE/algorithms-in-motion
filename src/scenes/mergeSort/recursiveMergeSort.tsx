@@ -229,5 +229,10 @@ export default makeScene2D(function* (view) {
     );
 
     // color green
-    yield* sequence(0.1, ...rects.map(rect => rect.fill(Colors.green, 0.3)))
+    yield* all(
+        main_outline().stroke(Colors.surface, 0.3),
+        sequence(0.1, ...rects.map(rect => rect.fill(Colors.green, 0.3))),
+    )
+
+    yield* waitFor(1);
 });
