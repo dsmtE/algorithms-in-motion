@@ -1,6 +1,6 @@
 import {defineConfig} from 'vite';
 import motionCanvas from '@motion-canvas/vite-plugin';
-import ffmpeg from '@motion-canvas/ffmpeg';
+// import ffmpeg from '@motion-canvas/ffmpeg';
 import { fileURLToPath, URL } from 'url';
 
 export default defineConfig({
@@ -12,7 +12,7 @@ export default defineConfig({
         './src/projects/mergeSort.ts',
       ]
     }),
-    ffmpeg(),
+    // ffmpeg(),
   ],
   build: {
     rollupOptions: {
