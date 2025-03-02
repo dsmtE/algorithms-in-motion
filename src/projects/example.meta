@@ -7,8 +7,8 @@
       null
     ],
     "size": {
-      "x": 1920,
-      "y": 1080
+      "x": 800,
+      "y": 400
     },
     "audioOffset": 0
   },
@@ -17,7 +17,7 @@
     "resolutionScale": 1
   },
   "rendering": {
-    "fps": 60,
+    "fps": 30,
     "resolutionScale": 1,
     "colorSpace": "srgb",
     "exporter": {
