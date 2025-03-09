@@ -1,5 +1,5 @@
 import {makeScene2D, Circle, Latex, is, Path, Rect, Curve, Layout, Line, Node, Txt, Shape} from '@motion-canvas/2d';
-import {all, chain, createRef, delay, sequence, waitFor, Vector2, ThreadGenerator, Signal, createSignal, SimpleSignal, Reference} from '@motion-canvas/core';
+import {all, chain, createRef, delay, sequence, waitFor, Vector2, ThreadGenerator, Signal, createSignal, SimpleSignal, Reference, Origin} from '@motion-canvas/core';
 import { Colors, textStyle } from "@/styles/styles";
 import {Style as ArrayStyle, boxWidthGap} from "@/utils/ArrayConstants";
 
@@ -145,7 +145,6 @@ export default makeScene2D(function* (view) {
         appearLatexCurve(LatexRef())
     );
 
-
     // convert to infix
     yield* all(
         explanationText().text('Infix Expression', 1),
@@ -193,14 +192,6 @@ export default makeScene2D(function* (view) {
     symbolsPathsClones.forEach((p, i) => p.absolutePosition(symbolsPaths[i].absolutePosition()));
     symbolsPathsClones.forEach((p, i) => p.scale(p.scale().mul(symbolsPaths[i].parent().scale())));
 
-    // test anim
-    // symbolsPathsClones.forEach(p => p.save());
-    // yield* sequence(
-    //     0.6,
-    //     sequence(0.1, ...symbolsPathsClones.map(p => p.y(p.y() + 20, .4))),
-    //     sequence(0.1, ...symbolsPathsClones.map(p => p.restore(.4))),
-    // )
-
     const stackContainer = createRef<Layout>();
     const stackOutline = createRef<Rect>();
 
@@ -218,8 +209,8 @@ export default makeScene2D(function* (view) {
             ref={stackContainer}
             opacity={0}
             bottomRight={view.bottomRight().sub(margin)}
-            width={200}
-            height={view.height() - 3*margin}
+            width={150}
+            height={view.height() - 300}
         />
     )
 
@@ -254,10 +245,10 @@ export default makeScene2D(function* (view) {
     yield* all(
         stackOutline().opacity(1, 1),
         stackText().opacity(1, 1),
-        explanationText().text('let\'s Evaluate RPN', 1),
+        explanationText().text('Let\'s Evaluate RPN', 1),
     );
 
-    yield* waitFor(0.5);
+    yield* waitFor(1);
 
     yield* explanationText().text('', 1)
 
@@ -272,34 +263,31 @@ export default makeScene2D(function* (view) {
         // move symbol to center
         yield* symbolPath.topLeft(Center(view), 1);
 
-        //TODO display if it's a number or operator
-        
-        explanationText().textAlign('center');
-
         if(isNumber(symbol)) {
             
-            yield* explanationText().text('number', 1)
             if(i == 0) {
+                yield* explanationText().text('It\'s a number', 1)
                 yield* waitFor(0.5)
                 yield* explanationText().text('Move it to the stack', 1)
                 yield* waitFor(0.5)
+            }else {
+                yield* explanationText().text('Number', 1)
             }
             yield* waitFor(0.5)
             yield* explanationText().text('', 1)
             
             //move to stack
-            yield* symbolPath.position(stackContainer().bottom().add([0, -40 - stackElements.length * 80]), 1);
+            yield* symbolPath.position(stackContainer().bottom().add([-20, -20 - stackElements.length * 80]), 1);
             stackElements.push({shape: symbolPath, value: symbol});
         } else {
-
-            yield* explanationText().text('operator', 1)
+            
             if(firstOperator) {
-                yield* waitFor(0.5)
-                yield* explanationText().text('Apply it to the last two elements in the stack', 1)
+                yield* explanationText().text('It\'s an operator', 1)
                 yield* waitFor(1)
-                yield* explanationText().text('Move the result to the stack', 1)
-                yield* waitFor(0.5)
-                firstOperator = false;
+                yield* explanationText().text('Apply it to the last two elements in the stack', 1)
+                yield* waitFor(1.5)
+            }else {
+                yield* explanationText().text('Operator', 1)
             }
             yield* waitFor(0.5)
             yield* explanationText().text('', 1)
@@ -312,12 +300,10 @@ export default makeScene2D(function* (view) {
             let right : ShapeAndValue = stackElements.pop();
             let left: ShapeAndValue = stackElements.pop();
             yield* all(
-                right.shape.left(symbolPath.right().add([20, 0]), 1),
-                left.shape.right(symbolPath.left().sub([20, 0]), 1),
+                right.shape.position(symbolPath.right().add([50, 0]), 1),
+                left.shape.position(symbolPath.left().sub([30 + 40 * (left.value.length-1), 0]), 1),
             );
 
-            console.log('left: ', left.value);
-            console.log('right: ', right.value);
             // compute result
             let result = 0;
             switch(symbol) {
@@ -328,28 +314,56 @@ export default makeScene2D(function* (view) {
             }
 
             //create new LatexElement with result
-            let resultTex = new Latex({
-                tex: result.toString(),
-                fill: Colors.white,
-                fontSize: 64,
-                position: symbolPath.position(),
-                opacity: 0,
-            });
-            screenRef().add(resultTex);
+            let resultTex = createRef<Latex>();
+            // quick hack here with the offset to compensate curve extracted from latex that is not centered
+            screenRef().add(
+                <Latex
+                    ref={resultTex}
+                    tex= {result.toString()}
+                    fill={ Colors.white}
+                    fontSize={ 64}
+                    position={ symbolPath.position()}
+                    opacity={ 0}
+                    offset={[-1, 1]}
+                />
+            );
             yield* all(
-                right.shape.opacity(0, 1),
-                left.shape.opacity(0, 1),
-                symbolPath.opacity(0, 1),
-                resultTex.opacity(1, 1),
+                right.shape.opacity(0, 0.5),
+                left.shape.opacity(0, 0.5),
+                symbolPath.opacity(0, 0.5),
+                resultTex().opacity(1, 0.5),
             );
 
-            // move result to stack
-            yield* resultTex.position(stackContainer().bottom().add([0, -40 - stackElements.length * 80]), 1);
-            stackElements.push({shape: resultTex, value: result.toString()});
-        }
+            right.shape.remove();
+            left.shape.remove();
+            symbolPath.remove();
 
-        yield* waitFor(0.5);
+            if(firstOperator) {
+                yield* explanationText().text('Move the result to the stack', 1)
+                yield* waitFor(1)
+                firstOperator = false;
+            }
+
+            yield* waitFor(0.5)
+            yield* explanationText().text('', 1)
+
+            // move result to stack
+            yield* resultTex().position(stackContainer().bottom().add([-20, -20 - stackElements.length * 80]), 1);
+            stackElements.push({shape: resultTex(), value: result.toString()});
+        }
     }
 
+    yield* explanationText().text('No more elements to process', 1)
+    yield* waitFor(1);
+    yield* explanationText().text('The result it\'s the remaining element in the stack', 1)
+    yield* waitFor(1);
+    yield* explanationText().text('', 1);
+    yield* all(
+        stackElements[0].shape.position(Center(view), 1),
+        stackElements[0].shape.scale(2, 1),
+        stackOutline().opacity(0, 1),
+        stackText().opacity(0, 1),
+    )
+    yield* waitFor(1);
 
 });
