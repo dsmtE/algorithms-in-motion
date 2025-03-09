@@ -249,29 +249,60 @@ export default makeScene2D(function* (view) {
         />
     )
 
-    yield* all(stackOutline().opacity(1, 1), stackText().opacity(1, 1));
+    explanationText().position(Center(view));
+
+    yield* all(
+        stackOutline().opacity(1, 1),
+        stackText().opacity(1, 1),
+        explanationText().text('let\'s Evaluate RPN', 1),
+    );
 
     yield* waitFor(0.5);
+
+    yield* explanationText().text('', 1)
+
+    explanationText().y(explanationText().y() + 60)
+
+    let firstOperator = true;
 
     for(let i = 0; i < RPNSymbols.length; i++) {
         let symbol = RPNSymbols[i];
         let symbolPath = symbolsPathsClones[i];
 
         // move symbol to center
-        yield* symbolPath.topLeft(view.topLeft().add(view.size().div(2)), 1);
+        yield* symbolPath.topLeft(Center(view), 1);
 
         //TODO display if it's a number or operator
         
+        explanationText().textAlign('center');
 
         if(isNumber(symbol)) {
+            
+            yield* explanationText().text('number', 1)
+            if(i == 0) {
+                yield* waitFor(0.5)
+                yield* explanationText().text('Move it to the stack', 1)
+                yield* waitFor(0.5)
+            }
+            yield* waitFor(0.5)
+            yield* explanationText().text('', 1)
+            
             //move to stack
             yield* symbolPath.position(stackContainer().bottom().add([0, -40 - stackElements.length * 80]), 1);
             stackElements.push({shape: symbolPath, value: symbol});
-            console.log('pushed number: ', symbol);
-            console.log('stackElements', stackElements);
         } else {
-            // TODO: implement operator
-            console.log('operator ', symbol);
+
+            yield* explanationText().text('operator', 1)
+            if(firstOperator) {
+                yield* waitFor(0.5)
+                yield* explanationText().text('Apply it to the last two elements in the stack', 1)
+                yield* waitFor(1)
+                yield* explanationText().text('Move the result to the stack', 1)
+                yield* waitFor(0.5)
+                firstOperator = false;
+            }
+            yield* waitFor(0.5)
+            yield* explanationText().text('', 1)
 
             if(stackElements.length < 2) {
                 console.log('not enough elements in stack');
